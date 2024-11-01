@@ -36,7 +36,10 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
+          git fetch origin version
           git checkout version || git checkout -b version
+
+          git merge origin/version || echo "No changes to merge"
 
           git add python_version.xml
           git commit -m "Update python version to ${STABLE_VERSION}" || echo "No changes to commit"
