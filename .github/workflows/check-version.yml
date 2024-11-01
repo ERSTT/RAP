@@ -36,14 +36,16 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          git fetch origin version
-          git checkout version || git checkout -b version
+          # 拉取远程 main 分支的最新更改
+          git fetch origin main
+          git checkout main || git checkout -b main
 
-          git merge origin/version || echo "No changes to merge"
+          # 合并远程分支的更改
+          git merge origin/main || echo "No changes to merge"
 
           git add python_version.xml
           git commit -m "Update python version to ${STABLE_VERSION}" || echo "No changes to commit"
 
-          git push origin version
+          git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
