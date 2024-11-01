@@ -2,8 +2,7 @@ name: Check Python Version
 
 on:
   schedule:
-    - cron: '* * * * *'
-#    - cron: '0 4 * * 1'
+    - cron: '0 * * * *'
 
 jobs:
   check-version:
