@@ -15,15 +15,22 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
 
-      # Step 2: Check if version file has been modified in the last 5 minutes
+      # Step 2: Debug: Check the git status
+      - name: Check git status
+        run: git status
+
+      # Step 3: Check if version file has been modified in the last 5 minutes
       - name: Check if version file has changed in the last 5 minutes
         id: check_changes
         run: |
           git fetch origin main
           # Get the last commit time for version/python.xml
           LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml)
+          echo "Last commit time (timestamp): $LAST_COMMIT_TIME"
           CURRENT_TIME=$(date +%s)
+          echo "Current time (timestamp): $CURRENT_TIME"
           TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
+          echo "Time difference (seconds): $TIME_DIFF"
           
           if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
             echo "Changes detected in version file within the last 5 minutes."
@@ -33,15 +40,15 @@ jobs:
             echo "has_changes=false" >> $GITHUB_ENV
           fi
 
-      # Step 3: Conditionally build Docker image
+      # Step 4: Conditionally build Docker image
       - name: Build Docker image
         if: ${{ env.has_changes == 'true' }}
         run: |
-          # Step 3.1: Log in to Docker Hub
+          # Step 4.1: Log in to Docker Hub
           echo "Logging in to Docker Hub..."
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           
-          # Step 3.2: Get the latest stable version of Python Alpine
+          # Step 4.2: Get the latest stable version of Python Alpine
           ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
           STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
             jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
@@ -50,9 +57,9 @@ jobs:
           
           echo "VERSION=${STABLE_VERSION}" >> $GITHUB_ENV
 
-          # Step 3.3: Build Docker image
+          # Step 4.3: Build Docker image
           docker build -t erstt/rap:python${{ env.VERSION }} -t erstt/rap:latest .
 
-          # Step 3.4: Push Docker image to Docker Hub
+          # Step 4.4: Push Docker image to Docker Hub
           docker push erstt/rap:python${{ env.VERSION }}
           docker push erstt/rap:latest
