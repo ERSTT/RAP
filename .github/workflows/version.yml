@@ -43,6 +43,9 @@ jobs:
 
           git merge origin/main || echo "No changes to merge"
 
+          # 打印当前 Git 状态
+          git status
+
           # Check if the file has changes
           if git diff --cached --quiet; then
               echo "No changes to commit"
