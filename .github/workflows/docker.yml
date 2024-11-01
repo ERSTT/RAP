@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - python_version.xml
-  workflow_dispatch:
 
 jobs:
   build:
