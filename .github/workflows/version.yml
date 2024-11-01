@@ -26,7 +26,6 @@ jobs:
 
           echo "Latest stable Python version: ${STABLE_VERSION}"
 
-          # 将输出文件路径更改为 version/python_version.xml
           mkdir -p version
           echo "<?xml version='1.0' encoding='UTF-8'?>
           <version>
@@ -45,7 +44,6 @@ jobs:
 
           git merge origin/main || echo "No changes to merge"
 
-          # 将文件路径更新为 version/python_version.xml
           git add version/python_version.xml
           git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
 
