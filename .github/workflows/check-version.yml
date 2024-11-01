@@ -1,9 +1,9 @@
 name: Check Python Version
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '* * * * *'
+  workflow_dispatch:
 #    - cron: '0 4 * * 1'
 
 jobs:
