@@ -30,7 +30,7 @@ jobs:
           echo "<?xml version='1.0' encoding='UTF-8'?>
           <version>
               <latest>${STABLE_VERSION}</latest>
-          </version>" > version/python_version.xml
+          </version>" > version/python.xml
 
           echo "version=${STABLE_VERSION}" >> $GITHUB_ENV
 
@@ -44,7 +44,7 @@ jobs:
 
           git merge origin/main || echo "No changes to merge"
 
-          git add version/python_version.xml
+          git add version/python.xml
           git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
 
           git push origin main
