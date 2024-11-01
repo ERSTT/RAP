@@ -36,7 +36,6 @@ jobs:
 
       - name: Commit version update
         run: |
-          git config --local user.email "${{ secrets.GITHUB_USER_EMAIL }}"
           git config --local user.name "${{ secrets.GITHUB_USER_NAME }}"
 
           git fetch origin main
