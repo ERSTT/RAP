@@ -36,8 +36,8 @@ jobs:
 
       - name: Commit version update
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "${{ secrets.GITHUB_USER_EMAIL }}"
+          git config --local user.name "${{ secrets.GITHUB_USER_NAME }}"
 
           git fetch origin main
           git checkout main || git checkout -b main
