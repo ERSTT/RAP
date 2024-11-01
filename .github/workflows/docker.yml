@@ -8,10 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  check_changes:
+  build_and_check_changes:
     runs-on: ubuntu-latest
-    outputs:
-      has_changes: ${{ steps.check_changes.outputs.has_changes }}
     steps:
       # Step 1: Check out code
       - name: Check out code
@@ -29,32 +27,21 @@ jobs:
           
           if [ $TIME_DIFF -le 1800 ]; then
             echo "Changes detected in version file within the last 30 minutes."
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "has_changes=true" >> $GITHUB_ENV
           else
             echo "No changes detected in version file within the last 30 minutes."
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "has_changes=false" >> $GITHUB_ENV
           fi
 
-  build:
-    runs-on: ubuntu-latest
-    needs: check_changes
-    if: ${{ github.event.workflow_run.conclusion == 'success' && needs.check_changes.outputs.has_changes == 'true' }}
-    steps:
-      # Step 1: Check out code
-      - name: Check out code
-        uses: actions/checkout@v4
-
-      # Step 2: Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Step 3: Get the latest stable version of Python Alpine
-      - name: Get the latest stable version of Python Alpine
-        id: get_version
+      # Step 3: Conditionally build Docker image
+      - name: Build Docker image
+        if: ${{ env.has_changes == 'true' }}
         run: |
+          # Step 3.1: Log in to Docker Hub
+          echo "Logging in to Docker Hub..."
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          
+          # Step 3.2: Get the latest stable version of Python Alpine
           ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
           STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
             jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
@@ -63,13 +50,9 @@ jobs:
           
           echo "VERSION=${STABLE_VERSION}" >> $GITHUB_ENV
 
-      # Step 4: Build Docker image
-      - name: Build Docker image
-        run: |
+          # Step 3.3: Build Docker image
           docker build -t erstt/rap:python${{ env.VERSION }} -t erstt/rap:latest .
 
-      # Step 5: Push Docker image to Docker Hub
-      - name: Push Docker image
-        run: |
+          # Step 3.4: Push Docker image to Docker Hub
           docker push erstt/rap:python${{ env.VERSION }}
           docker push erstt/rap:latest
