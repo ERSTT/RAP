@@ -2,8 +2,10 @@ name: Build and Push Docker Image
 
 on:
   push:
+    branches:
+      - main
     paths:
-      - '**/python_version.xml'
+      - 'version/*.xml'
 
 jobs:
   build:
