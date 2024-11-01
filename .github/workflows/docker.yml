@@ -21,14 +21,15 @@ jobs:
         id: check_changes
         run: |
           git fetch origin main
+          # Check for changes in the version file
           if git diff origin/main --exit-code version/python.xml; then
             echo "No changes detected in version file."
             echo "has_changes=false" >> $GITHUB_ENV
-            echo "::set-output name=has_changes::false"
+            echo "has_changes=false" >> $GITHUB_ENV
           else
             echo "Changes detected in version file."
             echo "has_changes=true" >> $GITHUB_ENV
-            echo "::set-output name=has_changes::true"
+            echo "has_changes=true" >> $GITHUB_ENV
           fi
 
   build:
