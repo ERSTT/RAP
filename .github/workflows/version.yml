@@ -43,9 +43,13 @@ jobs:
 
           git merge origin/main || echo "No changes to merge"
 
-          git add python_version.xml
-          git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
-
-          git push origin main
+          # Check if the file has changes
+          if git diff --cached --quiet; then
+              echo "No changes to commit"
+          else
+              git add python_version.xml
+              git commit -m "Update python version to ${{ env.version }}"
+              git push origin main
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
