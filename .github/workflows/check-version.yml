@@ -29,12 +29,12 @@ jobs:
           echo "<?xml version='1.0' encoding='UTF-8'?>
           <version>
               <latest>${STABLE_VERSION}</latest>
-          </version>" > version.xml
+          </version>" > python_version.xml
 
       - name: Commit version update
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add version.xml
-          git commit -m "Update version to ${STABLE_VERSION}" || echo "No changes to commit"
+          git add python_version.xml
+          git commit -m "Update python version to ${STABLE_VERSION}" || echo "No changes to commit"
           git push
