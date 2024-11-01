@@ -48,7 +48,8 @@ jobs:
       - name: Commit version update
         if: env.has_changes == 'true'
         run: |
-          git config --local user.name "${{ secrets.USER_NAME }}"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
           git fetch origin main
           git checkout main || git checkout -b main
@@ -60,4 +61,4 @@ jobs:
 
           git push origin main
         env:
-          GITHUB_TOKEN: ${{ secrets.RAP_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
