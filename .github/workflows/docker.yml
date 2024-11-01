@@ -1,0 +1,50 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Check out code
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Step 3: Get the latest stable version of Python Alpine
+      - name: Get the latest stable version of Python Alpine
+        id: get_version
+        run: |
+          # Get the SHA256 of the alpine tag
+          ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
+
+          # Get the latest stable version matching the alpine SHA256
+          STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
+            jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
+            '.results[] | select(.images[0].digest == $ALPINE_DIGEST) | .name' | \
+            grep -E '^[0-9]+(\.[0-9]+){0,2}-alpine$' | sort -V | tail -n 1 | sed 's/-alpine$//')
+          
+          echo "VERSION=${STABLE_VERSION}" >> $GITHUB_ENV
+
+      # Step 4: Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t erstt/rap:${{ env.VERSION }} -t erstt/rap:latest .
+
+      # Step 5: Push Docker image to Docker Hub
+      - name: Push Docker image
+        run: |
+          docker push erstt/rap:${{ env.VERSION }}
+          docker push erstt/rap:latest
