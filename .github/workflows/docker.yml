@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - '**/python_version.xml'
+  pull_request:
+    paths:
+      - '**/python_version.xml'
 
 jobs:
   build:
