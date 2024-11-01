@@ -38,10 +38,10 @@ jobs:
       # Step 4: Build Docker image
       - name: Build Docker image
         run: |
-          docker build -t erstt/rap:${{ env.VERSION }} -t erstt/rap:latest .
+          docker build -t erstt/rap:python${{ env.VERSION }} -t erstt/rap:latest .
 
       # Step 5: Push Docker image to Docker Hub
       - name: Push Docker image
         run: |
-          docker push erstt/rap:${{ env.VERSION }}
+          docker push erstt/rap:python${{ env.VERSION }}
           docker push erstt/rap:latest
