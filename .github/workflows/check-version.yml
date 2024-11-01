@@ -1,0 +1,39 @@
+name: Check Python Version
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Get latest stable Python version
+        id: get_version
+        run: |
+          # Get the SHA256 of the alpine tag
+          ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
+
+          # Get the latest stable version matching the alpine SHA256
+          STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
+            jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
+            '.results[] | select(.images[0].digest == $ALPINE_DIGEST) | .name' | \
+            grep -E '^[0-9]+(\.[0-9]+){0,2}-alpine$' | sort -V | tail -n 1 | sed 's/-alpine$//')
+
+          echo "Latest stable Python version: ${STABLE_VERSION}"
+
+          echo "<?xml version='1.0' encoding='UTF-8'?>
+          <version>
+              <latest>${STABLE_VERSION}</latest>
+          </version>" > version.xml
+
+      - name: Commit version update
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add version.xml
+          git commit -m "Update version to ${STABLE_VERSION}" || echo "No changes to commit"
+          git push
