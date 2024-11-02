@@ -30,7 +30,7 @@ jobs:
           TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
 
 
-          THRESHOLD=300
+          THRESHOLD=5
 
           if [ $TIME_DIFF -lt $THRESHOLD ]; then
             echo "has_recent_changes=true" >> $GITHUB_ENV
