@@ -27,23 +27,15 @@ jobs:
           </version>" > python.xml
           echo "version=${STABLE_VERSION}" >> $GITHUB_ENV
 
-      - name: Check if version file is updated
-        run: |
-          if git diff --exit-code python.xml; then
-            echo "has_changes=false" >> $GITHUB_ENV
-          else
-            echo "has_changes=true" >> $GITHUB_ENV
-          fi
-
       - name: Commit version update
-        if: env.has_changes == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch origin version
           git checkout version || git checkout -b version
+          git merge origin/version || echo "No changes to merge"
           git add python.xml
-          git commit -m "Update python version to ${{ env.version }}"
+          git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
           git push origin version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
