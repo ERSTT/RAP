@@ -20,6 +20,19 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Get the latest stable version of Python Alpine
+        id: get_version
+        run: |
+          # Get the SHA256 of the alpine tag
+          ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
+          # Get the latest stable version matching the alpine SHA256
+          STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
+            jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
+            '.results[] | select(.images[0].digest == $ALPINE_DIGEST) | .name' | \
+            grep -E '^[0-9]+(\.[0-9]+){0,2}-alpine$' | sort -V | tail -n 1 | sed 's/-alpine$//')
+          
+          echo "VERSION=${STABLE_VERSION}" >> $GITHUB_ENV
+
       - name: Get the time of the last commit
         id: get_commit_time
         run: |
@@ -47,9 +60,6 @@ jobs:
       - name: Build Docker image
         if: env.has_recent_changes == 'true'
         run: |
-          VERSION=$(xmllint --xpath 'string(//latest)' version/python.xml)
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          
           docker build -t erstt/rap:python${{ env.VERSION }} -t erstt/rap:latest .
           docker push erstt/rap:python${{ env.VERSION }}
           docker push erstt/rap:latest
