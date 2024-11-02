@@ -19,37 +19,38 @@ jobs:
       - name: Check git status
         run: git status
 
-# Step 3: Check if version file has been modified in the last 5 minutes
-- name: Check if version file has changed in the last 5 minutes
-  id: check_changes
-  run: |
-    git fetch origin main
-    # Get the current time in seconds since epoch
-    CURRENT_TIME=$(date +%s)
-    echo "Current time (timestamp): $CURRENT_TIME"
+      # Step 3: Check if version file has been modified in the last 5 minutes
+      - name: Check if version file has changed in the last 5 minutes
+        id: check_changes
+        run: |
+          git fetch origin main
+          
+          # Get the current time in seconds since epoch
+          CURRENT_TIME=$(date +%s)
+          echo "Current time (timestamp): $CURRENT_TIME"
 
-    # Get the last commit time for version/python.xml
-    LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml)
-    
-    if [ -z "$LAST_COMMIT_TIME" ]; then
-      echo "The version file has no commits yet or does not exist."
-      echo "has_changes=false" >> $GITHUB_ENV
-      exit 0
-    fi
+          # Get the last commit time for version/python.xml
+          LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml)
+          
+          if [ -z "$LAST_COMMIT_TIME" ]; then
+            echo "The version file has no commits yet or does not exist."
+            echo "has_changes=false" >> $GITHUB_ENV
+            exit 0
+          fi
 
-    echo "Last commit time (timestamp): $LAST_COMMIT_TIME"
+          echo "Last commit time (timestamp): $LAST_COMMIT_TIME"
 
-    # Calculate the time difference
-    TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
-    echo "Time difference (seconds): $TIME_DIFF"
-    
-    if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
-      echo "Changes detected in version file within the last 5 minutes."
-      echo "has_changes=true" >> $GITHUB_ENV
-    else
-      echo "No changes detected in version file within the last 5 minutes."
-      echo "has_changes=false" >> $GITHUB_ENV
-    fi
+          # Calculate the time difference
+          TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
+          echo "Time difference (seconds): $TIME_DIFF"
+          
+          if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
+            echo "Changes detected in version file within the last 5 minutes."
+            echo "has_changes=true" >> $GITHUB_ENV
+          else
+            echo "No changes detected in version file within the last 5 minutes."
+            echo "has_changes=false" >> $GITHUB_ENV
+          fi
 
       # Step 4: Conditionally build Docker image
       - name: Build Docker image
