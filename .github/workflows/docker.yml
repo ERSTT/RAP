@@ -25,25 +25,14 @@ jobs:
         run: |
           git fetch origin main
           
-          # Get the current time in seconds since epoch
-          CURRENT_TIME=$(date +%s)
-          echo "Current time (timestamp): $CURRENT_TIME"
-
           # Get the last commit time for version/python.xml
-          LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml)
+          LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml || echo "0")
           
-          if [ -z "$LAST_COMMIT_TIME" ]; then
-            echo "The version file has no commits yet or does not exist."
-            echo "has_changes=false" >> $GITHUB_ENV
-            exit 0
-          fi
-
-          echo "Last commit time (timestamp): $LAST_COMMIT_TIME"
-
-          # Calculate the time difference
+          # Get the current time and calculate the time difference
+          CURRENT_TIME=$(date +%s)
           TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
-          echo "Time difference (seconds): $TIME_DIFF"
           
+          # Set the environment variable based on the time difference
           if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
             echo "Changes detected in version file within the last 5 minutes."
             echo "has_changes=true" >> $GITHUB_ENV
@@ -69,9 +58,7 @@ jobs:
           
           echo "VERSION=${STABLE_VERSION}" >> $GITHUB_ENV
 
-          # Step 4.3: Build Docker image
+          # Step 4.3: Build and Push Docker image
           docker build -t erstt/rap:python${{ env.VERSION }} -t erstt/rap:latest .
-
-          # Step 4.4: Push Docker image to Docker Hub
           docker push erstt/rap:python${{ env.VERSION }}
           docker push erstt/rap:latest
