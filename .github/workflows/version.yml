@@ -15,9 +15,7 @@ jobs:
       - name: Get latest stable Python version
         id: get_version
         run: |
-          # Get the SHA256 of the alpine tag
           ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
-          # Get the latest stable version matching the alpine SHA256
           STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
             jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
             '.results[] | select(.images[0].digest == $ALPINE_DIGEST) | .name' | \
@@ -26,23 +24,26 @@ jobs:
           echo "<?xml version='1.0' encoding='UTF-8'?>
           <version>
               <latest>${STABLE_VERSION}</latest>
-          </version>" > python_version.xml
+          </version>" > python.xml
           echo "version=${STABLE_VERSION}" >> $GITHUB_ENV
 
+      - name: Check if version file is updated
+        run: |
+          if git diff --exit-code python.xml; then
+            echo "has_changes=false" >> $GITHUB_ENV
+          else
+            echo "has_changes=true" >> $GITHUB_ENV
+          fi
+
       - name: Commit version update
+        if: env.has_changes == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch origin version
           git checkout version || git checkout -b version
-
-          # 如果本地分支与远程分支没有共同历史，则允许合并不相关的历史
-          git merge --allow-unrelated-histories origin/version || echo "No changes to merge"
-
-          git add python_version.xml
-          git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
-          
-          # 尝试推送，如果失败则先拉取远程更改
-          git push origin version || (git pull --rebase origin version && git push origin version)
+          git add python.xml
+          git commit -m "Update python version to ${{ env.version }}"
+          git push origin version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
