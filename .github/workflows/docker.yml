@@ -25,18 +25,23 @@ jobs:
         run: |
           git fetch origin main
           # Get the last commit time for version/python.xml
-          LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml)
-          echo "Last commit time (timestamp): $LAST_COMMIT_TIME"
-          CURRENT_TIME=$(date +%s)
-          echo "Current time (timestamp): $CURRENT_TIME"
-          TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
-          echo "Time difference (seconds): $TIME_DIFF"
-          
-          if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
-            echo "Changes detected in version file within the last 5 minutes."
-            echo "has_changes=true" >> $GITHUB_ENV
+          if git log -1 --format=%ct -- version/python.xml; then
+            LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml)
+            echo "Last commit time (timestamp): $LAST_COMMIT_TIME"
+            CURRENT_TIME=$(date +%s)
+            echo "Current time (timestamp): $CURRENT_TIME"
+            TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
+            echo "Time difference (seconds): $TIME_DIFF"
+            
+            if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
+              echo "Changes detected in version file within the last 5 minutes."
+              echo "has_changes=true" >> $GITHUB_ENV
+            else
+              echo "No changes detected in version file within the last 5 minutes."
+              echo "has_changes=false" >> $GITHUB_ENV
+            fi
           else
-            echo "No changes detected in version file within the last 5 minutes."
+            echo "The version file has no commits yet or does not exist."
             echo "has_changes=false" >> $GITHUB_ENV
           fi
 
