@@ -28,16 +28,21 @@ jobs:
               <latest>${STABLE_VERSION}</latest>
           </version>" > python_version.xml
           echo "version=${STABLE_VERSION}" >> $GITHUB_ENV
-      
+
       - name: Commit version update
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git fetch origin version
           git checkout version || git checkout -b version
-          git merge origin/version || echo "No changes to merge"
+
+          # 如果本地分支与远程分支没有共同历史，则允许合并不相关的历史
+          git merge --allow-unrelated-histories origin/version || echo "No changes to merge"
+
           git add python_version.xml
           git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
-          git push origin version
+          
+          # 尝试推送，如果失败则先拉取远程更改
+          git push origin version || (git pull --rebase origin version && git push origin version)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
