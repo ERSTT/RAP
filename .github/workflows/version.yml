@@ -10,12 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Get latest stable Python version
         id: get_version
         run: |
+          # Get the SHA256 of the alpine tag
           ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
+          # Get the latest stable version matching the alpine SHA256
           STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
             jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
             '.results[] | select(.images[0].digest == $ALPINE_DIGEST) | .name' | \
@@ -24,9 +26,7 @@ jobs:
           echo "<?xml version='1.0' encoding='UTF-8'?>
           <version>
               <latest>${STABLE_VERSION}</latest>
-          </version>" > python.xml
-          echo "version=${STABLE_VERSION}" >> $GITHUB_ENV
-
+          </version>" > python_version.xml
       - name: Commit version update
         run: |
           git config --local user.email "action@github.com"
@@ -34,8 +34,8 @@ jobs:
           git fetch origin version
           git checkout version || git checkout -b version
           git merge origin/version || echo "No changes to merge"
-          git add python.xml
-          git commit -m "Update python version to ${{ env.version }}" || echo "No changes to commit"
+          git add python_version.xml
+          git commit -m "Update python version to ${STABLE_VERSION}" || echo "No changes to commit"
           git push origin version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
