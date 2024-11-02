@@ -32,7 +32,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git checkout version || git checkout -b version
-          git pull origin version
+          git pull --rebase origin version
           git add python_version.xml
           git commit -m "Update python version to ${STABLE_VERSION}" || echo "No changes to commit"
           git push origin version
