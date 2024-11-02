@@ -42,7 +42,7 @@ jobs:
 
       # Step 4: Conditionally build Docker image
       - name: Build Docker image
-        if: ${{ env.has_changes == 'true' }}
+        if: env.has_changes == 'true'
         run: |
           # Step 4.1: Log in to Docker Hub
           echo "Logging in to Docker Hub..."
