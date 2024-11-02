@@ -15,33 +15,23 @@ jobs:
       - name: Get latest stable Python version
         id: get_version
         run: |
-          # Get the SHA256 of the alpine tag
           ALPINE_DIGEST=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/alpine | jq -r '.images[0].digest')
-
-          # Get the latest stable version matching the alpine SHA256
           STABLE_VERSION=$(curl -s https://hub.docker.com/v2/repositories/library/python/tags/?page_size=100 | \
             jq -r --arg ALPINE_DIGEST "$ALPINE_DIGEST" \
             '.results[] | select(.images[0].digest == $ALPINE_DIGEST) | .name' | \
             grep -E '^[0-9]+(\.[0-9]+){0,2}-alpine$' | sort -V | tail -n 1 | sed 's/-alpine$//')
-
           echo "Latest stable Python version: ${STABLE_VERSION}"
-
-          mkdir -p version
           echo "<?xml version='1.0' encoding='UTF-8'?>
           <version>
               <latest>${STABLE_VERSION}</latest>
-          </version>" > version/python.xml
-
+          </version>" > python.xml
           echo "version=${STABLE_VERSION}" >> $GITHUB_ENV
 
       - name: Check if version file is updated
         run: |
-          # 检查是否有更改
-          if git diff --exit-code version/python.xml; then
-            echo "No changes detected in version file."
+          if git diff --exit-code python.xml; then
             echo "has_changes=false" >> $GITHUB_ENV
           else
-            echo "Changes detected in version file."
             echo "has_changes=true" >> $GITHUB_ENV
           fi
 
@@ -50,15 +40,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-
-          git fetch origin main
-          git checkout main || git checkout -b main
-
-          git merge origin/main || echo "No changes to merge"
-
-          git add version/python.xml
+          git fetch origin version
+          git checkout version || git checkout -b version
+          git merge origin/version || echo "No changes to merge"
+          git add python.xml
           git commit -m "Update python version to ${{ env.version }}"
-
-          git push origin main
+          git push origin version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
