@@ -19,25 +19,24 @@ jobs:
       - name: Check git status
         run: git status
 
-      # Step 3: Check if version file has been modified in the last 5 minutes
-      - name: Check if version file has changed in the last 5 minutes
+      # Step 3: Check if any file has been modified in the last 5 minutes
+      - name: Check if any file has changed in the last 5 minutes
         id: check_changes
         run: |
-          git fetch origin main
+          git fetch origin version  # 修改为 version 分支
           
-          # Get the last commit time for version/python.xml
-          LAST_COMMIT_TIME=$(git log -1 --format=%ct -- version/python.xml || echo "0")
-          
-          # Get the current time and calculate the time difference
+          # Get the current time and convert to seconds
           CURRENT_TIME=$(date +%s)
-          TIME_DIFF=$((CURRENT_TIME - LAST_COMMIT_TIME))
           
-          # Set the environment variable based on the time difference
-          if [ $TIME_DIFF -le 300 ]; then  # 5 minutes = 300 seconds
-            echo "Changes detected in version file within the last 5 minutes."
+          # Check for commits in the last 5 minutes
+          COMMIT_COUNT=$(git log origin/version --since="5 minutes ago" --pretty=format:"%H" | wc -l)
+
+          # Set the environment variable based on the commit count
+          if [ $COMMIT_COUNT -gt 0 ]; then
+            echo "Changes detected in the version branch within the last 5 minutes."
             echo "has_changes=true" >> $GITHUB_ENV
           else
-            echo "No changes detected in version file within the last 5 minutes."
+            echo "No changes detected in the version branch within the last 5 minutes."
             echo "has_changes=false" >> $GITHUB_ENV
           fi
 
